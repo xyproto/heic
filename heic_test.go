@@ -23,7 +23,6 @@ package heic
 import (
 	"fmt"
 	"image"
-	"io/ioutil"
 	"os"
 	"path"
 	"testing"
@@ -138,7 +137,7 @@ func TestReadFromMemory(t *testing.T) {
 	}
 
 	filename := path.Join("examples", "example.heic")
-	data, err := ioutil.ReadFile(filename)
+	data, err := os.ReadFile(filename)
 	if err != nil {
 		t.Fatalf("Can't read file %s: %s", filename, err)
 	}

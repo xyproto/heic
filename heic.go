@@ -33,7 +33,6 @@ import (
 	"image"
 	"image/color"
 	"io"
-	"io/ioutil"
 	"runtime"
 	"unsafe"
 )
@@ -1448,7 +1447,7 @@ func decodePrimaryImageFromReader(r io.Reader) (*ImageHandle, error) {
 		return nil, err
 	}
 
-	data, err := ioutil.ReadAll(r)
+	data, err := io.ReadAll(r)
 	if err != nil {
 		return nil, err
 	}
