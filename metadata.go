@@ -162,7 +162,7 @@ func (h *ImageHandle) ImageTimes(mID MetadataID) (ImageTimeTable, error) {
 
 	tiMapList, found := m["ti"]
 	if !found {
-		return nil, err
+		return nil, errors.New("no 'ti' key in apple_desktop:h24 metadata")
 	}
 	tii, ok := tiMapList.([]interface{})
 	if !ok {

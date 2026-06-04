@@ -1238,7 +1238,16 @@ func imageFromRGBA(i *image.RGBA) (*Image, error) {
 	if err != nil {
 		return nil, fmt.Errorf("failed to add plane: %v", err)
 	}
-	p.setData([]byte(i.Pix), w*4)
+	rowWidth := w * 4
+	if i.Stride == rowWidth {
+		p.setData(i.Pix, rowWidth)
+	} else {
+		pix := make([]byte, h*rowWidth)
+		for row := 0; row < h; row++ {
+			copy(pix[row*rowWidth:], i.Pix[row*i.Stride:row*i.Stride+rowWidth])
+		}
+		p.setData(pix, rowWidth)
+	}
 
 	return out, nil
 }
@@ -1260,9 +1269,9 @@ func imageFromRGBA64(i *image.RGBA64) (*Image, error) {
 	}
 
 	pix := make([]byte, w*h*8)
-	read_pos := 0
 	write_pos := 0
 	for y := 0; y < h; y++ {
+		read_pos := y * i.Stride
 		for x := 0; x < w; x++ {
 			r := (uint16(i.Pix[read_pos]) << 8) | uint16(i.Pix[read_pos+1])
 			r = r >> 6
@@ -1281,8 +1290,6 @@ func imageFromRGBA64(i *image.RGBA64) (*Image, error) {
 			read_pos += 2
 			a := (uint16(i.Pix[read_pos]) << 8) | uint16(i.Pix[read_pos+1])
 			a = a >> 6
-			pix[write_pos+6] = byte(a >> 8)
-			pix[write_pos+7] = byte(a & 0xff)
 			pix[write_pos+6] = byte(a >> 8)
 			pix[write_pos+7] = byte(a & 0xff)
 			read_pos += 2
@@ -1310,7 +1317,15 @@ func imageFromGray(i *image.Gray) (*Image, error) {
 	if err != nil {
 		return nil, fmt.Errorf("failed to add Y plane: %v", err)
 	}
-	pY.setData([]byte(i.Pix), i.Stride)
+	if i.Stride == w {
+		pY.setData(i.Pix, w)
+	} else {
+		yPix := make([]byte, h*w)
+		for row := 0; row < h; row++ {
+			copy(yPix[row*w:], i.Pix[row*i.Stride:row*i.Stride+w])
+		}
+		pY.setData(yPix, w)
+	}
 
 	return out, nil
 }
@@ -1343,7 +1358,15 @@ func imageFromYCbCr(i *image.YCbCr) (*Image, error) {
 	if err != nil {
 		return nil, fmt.Errorf("failed to add Y plane: %v", err)
 	}
-	pY.setData([]byte(i.Y), i.YStride)
+	if i.YStride == w {
+		pY.setData(i.Y, w)
+	} else {
+		yPix := make([]byte, h*w)
+		for row := 0; row < h; row++ {
+			copy(yPix[row*w:], i.Y[row*i.YStride:row*i.YStride+w])
+		}
+		pY.setData(yPix, w)
+	}
 
 	var cw, ch int
 	switch cm {
@@ -1358,12 +1381,28 @@ func imageFromYCbCr(i *image.YCbCr) (*Image, error) {
 	if err != nil {
 		return nil, fmt.Errorf("failed to add Cb plane: %v", err)
 	}
-	pCb.setData([]byte(i.Cb), i.CStride)
+	if i.CStride == cw {
+		pCb.setData(i.Cb, cw)
+	} else {
+		cbPix := make([]byte, ch*cw)
+		for row := 0; row < ch; row++ {
+			copy(cbPix[row*cw:], i.Cb[row*i.CStride:row*i.CStride+cw])
+		}
+		pCb.setData(cbPix, cw)
+	}
 	pCr, err := out.NewPlane(ChannelCr, cw, ch, depth)
 	if err != nil {
 		return nil, fmt.Errorf("failed to add Cr plane: %v", err)
 	}
-	pCr.setData([]byte(i.Cr), i.CStride)
+	if i.CStride == cw {
+		pCr.setData(i.Cr, cw)
+	} else {
+		crPix := make([]byte, ch*cw)
+		for row := 0; row < ch; row++ {
+			copy(crPix[row*cw:], i.Cr[row*i.CStride:row*i.CStride+cw])
+		}
+		pCr.setData(crPix, cw)
+	}
 
 	return out, nil
 }
