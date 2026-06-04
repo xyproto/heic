@@ -28,14 +28,9 @@ func (n *Node) SelectAttr(name string) string {
 		}
 		return ""
 	}
-	var local, space string
-	local = name
-	if i := strings.Index(name, ":"); i > 0 {
-		space = name[:i]
-		local = name[i+1:]
-	}
+	xmlName := newXMLName(name)
 	for _, attr := range n.Attr {
-		if attr.Name.Local == local && attr.Name.Space == space {
+		if attr.Name == xmlName {
 			return attr.Value
 		}
 	}
@@ -161,7 +156,7 @@ func (x *NodeNavigator) NodeType() xpath.NodeType {
 	switch x.curr.Type {
 	case CommentNode:
 		return xpath.CommentNode
-	case TextNode, CharDataNode:
+	case TextNode, CharDataNode, NotationNode:
 		return xpath.TextNode
 	case DeclarationNode, DocumentNode:
 		return xpath.RootNode
@@ -169,6 +164,8 @@ func (x *NodeNavigator) NodeType() xpath.NodeType {
 		if x.attr != -1 {
 			return xpath.AttributeNode
 		}
+		return xpath.ElementNode
+	case ProcessingInstruction: // Keep backward compatibility
 		return xpath.ElementNode
 	}
 	panic(fmt.Sprintf("unknown XML node type: %v", x.curr.Type))
